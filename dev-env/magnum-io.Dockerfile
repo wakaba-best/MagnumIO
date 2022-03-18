@@ -1,23 +1,10 @@
 # GENERATED FILE, DO NOT EDIT
 
-FROM nvcr.io/nvidia/cuda:11.4.0-devel-ubuntu20.04
+FROM nvcr.io/nvidia/pytorch:21.12-py3
 
-# NVIDIA Nsight Systems 2021.2.1
-RUN apt-get update -y && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        apt-transport-https \
-        ca-certificates \
-        gnupg \
-        wget && \
-    rm -rf /var/lib/apt/lists/*
-RUN wget -qO - https://developer.download.nvidia.com/devtools/repos/ubuntu2004/amd64/nvidia.pub | apt-key add - && \
-    echo "deb https://developer.download.nvidia.com/devtools/repos/ubuntu2004/amd64/ /" >> /etc/apt/sources.list.d/hpccm.list && \
-    apt-get update -y && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        nsight-systems-cli-2022.1.1 && \
-    rm -rf /var/lib/apt/lists/*
+# NVIDIA Nsight Systems 2021.3.2
 
-# Mellanox OFED version 5.3-1.0.0.1
+# Mellanox OFED version 5.4-1.0.3.0
 RUN apt-get update -y && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         ca-certificates \
@@ -25,7 +12,7 @@ RUN apt-get update -y && \
         wget && \
     rm -rf /var/lib/apt/lists/*
 RUN wget -qO - https://www.mellanox.com/downloads/ofed/RPM-GPG-KEY-Mellanox | apt-key add - && \
-    mkdir -p /etc/apt/sources.list.d && wget -q -nc --no-check-certificate -P /etc/apt/sources.list.d https://linux.mellanox.com/public/repo/mlnx_ofed/5.3-1.0.0.1/ubuntu20.04/mellanox_mlnx_ofed.list && \
+    mkdir -p /etc/apt/sources.list.d && wget -q -nc --no-check-certificate -P /etc/apt/sources.list.d https://linux.mellanox.com/public/repo/mlnx_ofed/5.4-1.0.3.0/ubuntu20.04/mellanox_mlnx_ofed.list && \
     apt-get update -y && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         ibverbs-providers \
@@ -40,41 +27,23 @@ RUN wget -qO - https://www.mellanox.com/downloads/ofed/RPM-GPG-KEY-Mellanox | ap
         librdmacm1 && \
     rm -rf /var/lib/apt/lists/*
 
-# GDRCOPY version 2.2
+# GDRCOPY version 2.3
 RUN apt-get update -y && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         make \
         wget && \
     rm -rf /var/lib/apt/lists/*
-RUN mkdir -p /var/tmp && wget -q -nc --no-check-certificate -P /var/tmp https://github.com/NVIDIA/gdrcopy/archive/v2.2.tar.gz && \
-    mkdir -p /var/tmp && tar -x -f /var/tmp/v2.2.tar.gz -C /var/tmp -z && \
-    cd /var/tmp/gdrcopy-2.2 && \
+RUN mkdir -p /var/tmp && wget -q -nc --no-check-certificate -P /var/tmp https://github.com/NVIDIA/gdrcopy/archive/v2.3.tar.gz && \
+    mkdir -p /var/tmp && tar -x -f /var/tmp/v2.3.tar.gz -C /var/tmp -z && \
+    cd /var/tmp/gdrcopy-2.3 && \
     mkdir -p /usr/local/gdrcopy/include /usr/local/gdrcopy/lib && \
     make prefix=/usr/local/gdrcopy lib lib_install && \
     echo "/usr/local/gdrcopy/lib" >> /etc/ld.so.conf.d/hpccm.conf && ldconfig && \
-    rm -rf /var/tmp/gdrcopy-2.2 /var/tmp/v2.2.tar.gz
+    rm -rf /var/tmp/gdrcopy-2.3 /var/tmp/v2.3.tar.gz
 ENV CPATH=/usr/local/gdrcopy/include:$CPATH \
     LIBRARY_PATH=/usr/local/gdrcopy/lib:$LIBRARY_PATH
 
-# UCX version 1.10.1
-RUN apt-get update -y && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        binutils-dev \
-        file \
-        libnuma-dev \
-        make \
-        wget && \
-    rm -rf /var/lib/apt/lists/*
-RUN mkdir -p /var/tmp && wget -q -nc --no-check-certificate -P /var/tmp https://github.com/openucx/ucx/releases/download/v1.10.1/ucx-1.10.1.tar.gz && \
-    mkdir -p /var/tmp && tar -x -f /var/tmp/ucx-1.10.1.tar.gz -C /var/tmp -z && \
-    cd /var/tmp/ucx-1.10.1 &&   ./configure --prefix=/usr/local/ucx --disable-assertions --disable-debug --disable-doxygen-doc --disable-logging --disable-params-check --disable-static --enable-mt --enable-optimizations --with-cuda=/usr/local/cuda --with-gdrcopy=/usr/local/gdrcopy && \
-    make -j$(nproc) && \
-    make -j$(nproc) install && \
-    echo "/usr/local/ucx/lib" >> /etc/ld.so.conf.d/hpccm.conf && ldconfig && \
-    rm -rf /var/tmp/ucx-1.10.1 /var/tmp/ucx-1.10.1.tar.gz
-ENV CPATH=/usr/local/ucx/include:$CPATH \
-    LIBRARY_PATH=/usr/local/ucx/lib:$LIBRARY_PATH \
-    PATH=/usr/local/ucx/bin:$PATH
+# UCX version 1.11.0
 
 # NVSHMEM 2.2.1
 RUN apt-get update -y && \
@@ -99,17 +68,22 @@ RUN apt-get update -y && \
         gnupg \
         wget && \
     rm -rf /var/lib/apt/lists/*
-
-RUN apt-get update -y && \
+RUN wget -qO - https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub | apt-key add - && \
+    echo "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /" >> /etc/apt/sources.list.d/hpccm.list && \
+    apt-get update -y && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        libnccl-dev=2.11.4-1+cuda11.4 \
-        libnccl2=2.11.4-1+cuda11.4 && \
+        libnccl-dev=2.11.4-1+cuda11.5 \
+        libnccl2=2.11.4-1+cuda11.5 && \
     rm -rf /var/lib/apt/lists/*
 
+# GDS 1.1.0.37-1
 RUN apt-get update -y && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        cuda-visual-tools-11-4=11.4.0-1 \
-        cuda-tools-11-4=11.4.0-1 && \
+        gds-tools-11-5=1.1.0.37-1 \
+        libcufile-11-5=1.1.1.25-1 \
+        libcufile-dev-11-5=1.1.1.25-1 \
+        libssl-dev \
+        sudo && \
     rm -rf /var/lib/apt/lists/*
 
 COPY magnum-io.Dockerfile \
@@ -117,7 +91,7 @@ COPY magnum-io.Dockerfile \
     README.md \
     /
 
-ENV MAGNUM_IO_VERSION=21.07
+ENV MAGNUM_IO_VERSION=21.12-pytorch
 
 SHELL ["/bin/bash", "-c"]
 CMD ["/bin/bash" ]
